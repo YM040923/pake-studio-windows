@@ -15,13 +15,14 @@ Pake Studio 是一个面向普通用户的 Windows 图形化客户端：
 
 ## 当前版本
 
-这是 `0.1.0` MVP，已经包含：
+这是 `0.1.1` Beta，已经包含：
 
 - GitHub OAuth Device Flow 登录
 - GitHub Token 开发模式回退
 - Windows Credential Manager 安全保存令牌
 - 自动创建 `tw93/Pake` Fork
 - 自动启用 `pake-cli.yaml` 工作流
+- 首次使用时引导完成 GitHub 对 Fork 工作流的一次性安全确认
 - 图形化填写网址、名称、图标、尺寸和版本
 - 触发 Windows GitHub Actions 构建
 - 实时轮询队列与构建状态

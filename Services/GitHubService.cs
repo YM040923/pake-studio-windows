@@ -92,7 +92,7 @@ public sealed class GitHubService : IDisposable
         {
             progress?.Report("已找到你的 Pake 构建仓库");
             await TrySyncForkAsync(login, existing.DefaultBranch, cancellationToken);
-            await EnableWorkflowAsync(login, cancellationToken);
+            await EnableWorkflowAsync(login, progress, cancellationToken);
             return existing;
         }
 
@@ -117,7 +117,7 @@ public sealed class GitHubService : IDisposable
             {
                 progress?.Report("构建仓库准备完成");
                 await TrySyncForkAsync(login, existing.DefaultBranch, cancellationToken);
-                await EnableWorkflowAsync(login, cancellationToken);
+                await EnableWorkflowAsync(login, progress, cancellationToken);
                 return existing;
             }
         }
@@ -264,9 +264,12 @@ public sealed class GitHubService : IDisposable
         return outputPath;
     }
 
-    private async Task EnableWorkflowAsync(string login, CancellationToken cancellationToken)
+    private async Task EnableWorkflowAsync(
+        string login,
+        IProgress<string>? progress,
+        CancellationToken cancellationToken)
     {
-        for (var attempt = 0; attempt < 10; attempt++)
+        for (var attempt = 0; attempt < 5; attempt++)
         {
             using var request = new HttpRequestMessage(
                 HttpMethod.Put,
@@ -280,6 +283,7 @@ public sealed class GitHubService : IDisposable
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
+                progress?.Report("等待 GitHub 准备工作流");
                 await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
                 continue;
             }
@@ -287,7 +291,8 @@ public sealed class GitHubService : IDisposable
             await ThrowGitHubErrorAsync(response, cancellationToken);
         }
 
-        throw new InvalidOperationException("构建仓库已创建，但 GitHub Actions 工作流尚未准备完成。");
+        throw new WorkflowActivationRequiredException(
+            $"https://github.com/{login}/{PakeRepository}/actions");
     }
 
     private async Task<GitHubRepository?> TryGetRepositoryAsync(string login, CancellationToken cancellationToken)

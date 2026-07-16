@@ -220,7 +220,10 @@ public partial class MainWindow : Window
         {
             var repositoryProgress = new Progress<string>(message =>
                 SetBuildStatus("正在准备构建仓库", message));
-            await _gitHub.EnsurePakeForkAsync(_user.Login, repositoryProgress, cancellationToken);
+            await EnsureBuildRepositoryReadyAsync(
+                _user.Login,
+                repositoryProgress,
+                cancellationToken);
             BuildProgressBar.Value = 25;
 
             SetBuildStatus("正在提交构建任务", "正在把网页配置发送到你的 GitHub Actions。");
@@ -305,6 +308,51 @@ public partial class MainWindow : Window
         finally
         {
             _operationCancellation?.Cancel();
+        }
+    }
+
+    private async Task EnsureBuildRepositoryReadyAsync(
+        string login,
+        IProgress<string> progress,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _gitHub.EnsurePakeForkAsync(login, progress, cancellationToken);
+        }
+        catch (WorkflowActivationRequiredException exception)
+        {
+            SetBuildStatus(
+                "需要完成一次 GitHub 确认",
+                "GitHub 会保护新 Fork 中的工作流。确认一次后，以后无需重复操作。");
+            OpenUrl(exception.ActionsUrl);
+
+            var result = MessageBox.Show(
+                "已为你打开 GitHub Actions 页面。\n\n" +
+                "1. 点击页面中的绿色按钮：\n" +
+                "   “I understand my workflows, go ahead and enable them”\n" +
+                "2. 完成后回到 Pake Studio，点击下方“确定”。\n\n" +
+                "这是 GitHub 对新 Fork 的一次性安全确认。",
+                "首次使用需要确认一次",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Information);
+
+            if (result != MessageBoxResult.OK)
+            {
+                throw new OperationCanceledException(cancellationToken);
+            }
+
+            SetBuildStatus("正在确认 GitHub Actions", "确认成功后，构建会自动继续。");
+
+            try
+            {
+                await _gitHub.EnsurePakeForkAsync(login, progress, cancellationToken);
+            }
+            catch (WorkflowActivationRequiredException)
+            {
+                throw new InvalidOperationException(
+                    "GitHub Actions 尚未启用。请在已打开的网页点击绿色启用按钮，然后重新开始生成。");
+            }
         }
     }
 
