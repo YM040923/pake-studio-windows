@@ -1,0 +1,56 @@
+name: Build Pake Studio for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore PakeStudio.csproj
+
+      - name: Build
+        run: dotnet build PakeStudio.csproj --configuration Release --no-restore
+
+      - name: Publish portable Windows app
+        shell: pwsh
+        run: |
+          dotnet publish PakeStudio.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            --output dist `
+            /p:PublishSingleFile=true `
+            /p:GitHubOAuthClientId="${{ vars.PAKE_STUDIO_GITHUB_CLIENT_ID }}"
+
+      - name: Upload Windows app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pake-Studio-Windows-x64
+          path: dist/PakeStudio.exe
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/PakeStudio.exe
+          generate_release_notes: true

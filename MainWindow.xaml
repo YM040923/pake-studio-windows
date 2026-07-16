@@ -1,0 +1,400 @@
+<Window x:Class="PakeStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pake Studio"
+        Width="1280"
+        Height="860"
+        MinWidth="1240"
+        MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="76" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="36" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#17213A">
+            <Grid Margin="28,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="44" Height="44" CornerRadius="12" Background="#246BFD" VerticalAlignment="Center">
+                    <TextBlock Text="P" Foreground="White" FontSize="24" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Pake Studio" Foreground="White" FontSize="21" FontWeight="SemiBold" />
+                    <TextBlock Text="粘贴网址，GitHub 自动生成 Windows 应用"
+                               Foreground="#B9C4DE" FontSize="12" Margin="0,3,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="HeaderAccountText"
+                               Text="尚未连接 GitHub"
+                               Foreground="#D9E1F2"
+                               VerticalAlignment="Center"
+                               Margin="0,0,12,0" />
+                    <Button x:Name="LogoutButton"
+                            Content="退出"
+                            Style="{StaticResource LinkButton}"
+                            Foreground="#B9C4DE"
+                            Visibility="Collapsed"
+                            Click="LogoutButton_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer x:Name="MainScrollViewer"
+                      Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <Border Padding="28,24,28,30"
+                    HorizontalAlignment="Center">
+            <Grid Width="1160">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.05*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="0.95*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <Border Background="{StaticResource CardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="22">
+                        <StackPanel>
+                            <DockPanel LastChildFill="True">
+                                <Border Width="34" Height="34" Background="#EAF0FF" CornerRadius="9"
+                                        DockPanel.Dock="Left" Margin="0,0,12,0">
+                                    <TextBlock Text="1" Foreground="#246BFD" FontWeight="Bold"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="连接 GitHub" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="GitHub 会在云端构建，电脑不需要安装开发环境"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               FontSize="12"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border x:Name="SignedOutPanel"
+                                    Background="#F7F9FD"
+                                    BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="16"
+                                    Margin="0,18,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="首次连接会打开 GitHub 登录页面。Pake Studio 只申请创建公开 Fork、运行工作流和下载产物所需的权限。"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               LineHeight="20" />
+                                    <Button x:Name="ConnectButton"
+                                            Content="连接 GitHub"
+                                            Style="{StaticResource PrimaryButton}"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,14,0,0"
+                                            Click="ConnectButton_Click" />
+
+                                    <StackPanel x:Name="DeviceCodePanel" Visibility="Collapsed" Margin="0,16,0,0">
+                                        <TextBlock Text="请在浏览器中输入这组验证码" FontWeight="SemiBold" />
+                                        <DockPanel Margin="0,8,0,0">
+                                            <Border Background="#17213A" CornerRadius="8" Padding="16,10">
+                                                <TextBlock x:Name="DeviceCodeText"
+                                                           Text="ABCD-EFGH"
+                                                           Foreground="White"
+                                                           FontFamily="Consolas"
+                                                           FontSize="20"
+                                                           FontWeight="Bold" />
+                                            </Border>
+                                            <Button Content="复制"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    Margin="10,0,0,0"
+                                                    Click="CopyDeviceCodeButton_Click" />
+                                        </DockPanel>
+                                        <TextBlock x:Name="DeviceStatusText"
+                                                   Text="正在等待 GitHub 确认…"
+                                                   Foreground="{StaticResource MutedTextBrush}"
+                                                   Margin="0,9,0,0" />
+                                    </StackPanel>
+
+                                    <Border x:Name="TokenFallbackPanel"
+                                            Visibility="Collapsed"
+                                            Margin="0,16,0,0"
+                                            Padding="14"
+                                            CornerRadius="8"
+                                            Background="#FFF8E8"
+                                            BorderBrush="#F0D18B"
+                                            BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="当前开发构建尚未配置 GitHub 登录。可以暂时使用访问令牌连接。"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#754800" />
+                                            <PasswordBox x:Name="TokenBox" Margin="0,10,0,0" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                <Button Content="使用令牌连接"
+                                                        Style="{StaticResource SecondaryButton}"
+                                                        Click="ConnectWithTokenButton_Click" />
+                                                <Button Content="创建令牌"
+                                                        Style="{StaticResource LinkButton}"
+                                                        Margin="10,0,0,0"
+                                                        Click="OpenTokenPageButton_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border x:Name="SignedInPanel"
+                                    Visibility="Collapsed"
+                                    Background="#EEF9F3"
+                                    BorderBrush="#A9D9BE"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="16"
+                                    Margin="0,18,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="GitHub 已连接" FontWeight="SemiBold" Foreground="#14613B" />
+                                    <TextBlock x:Name="SignedInUserText"
+                                               Text="@username"
+                                               FontSize="16"
+                                               Margin="0,5,0,0" />
+                                    <TextBlock Text="第一次生成时会自动创建你的 Pake Fork 并启用构建工作流。"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="{StaticResource CardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="22"
+                            Margin="0,18,0,0">
+                        <StackPanel>
+                            <DockPanel>
+                                <Border Width="34" Height="34" Background="#EAF0FF" CornerRadius="9"
+                                        DockPanel.Dock="Left" Margin="0,0,12,0">
+                                    <TextBlock Text="2" Foreground="#246BFD" FontWeight="Bold"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="填写网页信息" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="只需要网址和名称，其余保持默认即可"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               FontSize="12"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <TextBlock Text="网页地址" FontWeight="SemiBold" Margin="0,18,0,7" />
+                            <TextBox x:Name="UrlTextBox"
+                                     TextChanged="UrlTextBox_TextChanged"
+                                     ToolTip="例如：https://example.com" />
+
+                            <TextBlock Text="应用名称" FontWeight="SemiBold" Margin="0,14,0,7" />
+                            <TextBox x:Name="NameTextBox"
+                                     ToolTip="建议使用英文名称"
+                                     TextChanged="NameTextBox_TextChanged" />
+
+                            <TextBlock Text="图标地址（可选）" FontWeight="SemiBold" Margin="0,14,0,7" />
+                            <TextBox x:Name="IconTextBox" ToolTip="留空时自动获取网站图标" />
+
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="窗口尺寸" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                    <ComboBox x:Name="SizeComboBox" SelectionChanged="SizeComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="标准（1200 × 780）" Tag="1200,780" IsSelected="True" />
+                                        <ComboBoxItem Content="宽屏（1440 × 900）" Tag="1440,900" />
+                                        <ComboBoxItem Content="紧凑（960 × 700）" Tag="960,700" />
+                                        <ComboBoxItem Content="自定义" Tag="custom" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="应用版本" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                    <TextBox x:Name="VersionTextBox" Text="1.0.0" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid x:Name="CustomSizePanel" Visibility="Collapsed" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="WidthTextBox" Text="1200" ToolTip="宽度" />
+                                <TextBox x:Name="HeightTextBox" Grid.Column="2" Text="780" ToolTip="高度" />
+                            </Grid>
+
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="处理器架构" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                    <ComboBox x:Name="ArchitectureComboBox">
+                                        <ComboBoxItem Content="普通 Windows 电脑（x64）" Tag="x64" IsSelected="True" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <CheckBox x:Name="FullscreenCheckBox"
+                                          Grid.Column="2"
+                                          Content="启动时全屏"
+                                          VerticalAlignment="Center"
+                                          Margin="4,24,0,0"
+                                          FontSize="14" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <Border Background="{StaticResource CardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="22">
+                        <StackPanel>
+                            <DockPanel>
+                                <Border Width="34" Height="34" Background="#EAF0FF" CornerRadius="9"
+                                        DockPanel.Dock="Left" Margin="0,0,12,0">
+                                    <TextBlock Text="3" Foreground="#246BFD" FontWeight="Bold"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="生成 Windows 应用" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="构建由你的 GitHub Actions 完成"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               FontSize="12"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Border Background="#F7F9FD" CornerRadius="10" Padding="16" Margin="0,18,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="构建流程" FontWeight="SemiBold" />
+                                    <TextBlock Text="① 准备仓库&#x0a;② 提交 GitHub 构建任务&#x0a;③ 等待云端编译&#x0a;④ 自动下载安装包"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               LineHeight="25"
+                                               Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <Button x:Name="BuildButton"
+                                    Content="开始生成"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Margin="0,18,0,0"
+                                    IsEnabled="False"
+                                    Click="BuildButton_Click" />
+
+                            <Button x:Name="CancelButton"
+                                    Content="取消构建"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Margin="0,10,0,0"
+                                    Visibility="Collapsed"
+                                    Click="CancelButton_Click" />
+
+                            <StackPanel x:Name="ProgressPanel" Visibility="Collapsed" Margin="0,20,0,0">
+                                <ProgressBar x:Name="BuildProgressBar"
+                                             Height="10"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Value="0"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Background="#E3E8F2" />
+                                <TextBlock x:Name="BuildStatusText"
+                                           Text="正在准备…"
+                                           FontWeight="SemiBold"
+                                           Margin="0,12,0,0" />
+                                <TextBlock x:Name="BuildDetailText"
+                                           Text=""
+                                           Foreground="{StaticResource MutedTextBrush}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="20"
+                                           Margin="0,5,0,0" />
+                                <Button x:Name="OpenWorkflowButton"
+                                        Content="在 GitHub 查看详情"
+                                        Style="{StaticResource LinkButton}"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,8,0,0"
+                                        Visibility="Collapsed"
+                                        Click="OpenWorkflowButton_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="ResultPanel"
+                            Visibility="Collapsed"
+                            Background="#EEF9F3"
+                            BorderBrush="#A9D9BE"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="22"
+                            Margin="0,18,0,0">
+                        <StackPanel>
+                            <TextBlock Text="应用生成完成" FontSize="18" FontWeight="SemiBold" Foreground="#14613B" />
+                            <TextBlock x:Name="ResultPathText"
+                                       Text=""
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,9,0,0" />
+                            <TextBlock Text="下载的是 ZIP 压缩包，解压后即可找到 MSI 安装程序。"
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,7,0,0" />
+                            <Button Content="在文件夹中显示"
+                                    Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,14,0,0"
+                                    Click="OpenResultButton_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#FFF8E8"
+                            BorderBrush="#F0D18B"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="18"
+                            Margin="0,18,0,0">
+                        <StackPanel>
+                            <TextBlock Text="提示" FontWeight="SemiBold" Foreground="#754800" />
+                            <TextBlock Text="首次构建通常较慢。生成的安装包没有商业代码签名，Windows 可能显示“未知发布者”，这是个人构建应用的正常现象。"
+                                       Foreground="#754800"
+                                       TextWrapping="Wrap"
+                                       LineHeight="20"
+                                       Margin="0,7,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+            </Border>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Background="#FAFBFD">
+            <Grid Margin="28,0">
+                <TextBlock Text="Pake Studio 0.1 · 构建过程运行在你的 GitHub 账户中"
+                           Foreground="{StaticResource MutedTextBrush}"
+                           FontSize="11"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
