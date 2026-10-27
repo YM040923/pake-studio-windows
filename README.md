@@ -94,3 +94,9 @@ Pake-Studio-Windows-x64/PakeStudio.exe
 ## 与 Pake 的关系
 
 Pake Studio 不包含或修改 Pake 源代码，而是调用用户自己 Fork 中公开的 GitHub Actions 工作流。Pake 由 Tw93 和社区维护，本项目是独立的图形化客户端。
+
+## 来源与许可
+
+本项目自身采用 MIT License，见 [`LICENSE`](LICENSE)。
+
+构建流程依赖 [tw93/Pake](https://github.com/tw93/Pake)（GPL-3.0）。Pake Studio 只负责在用户自己的 GitHub 账户中创建 Pake fork 并触发其 GitHub Actions 构建，不包含 Pake 源码。
